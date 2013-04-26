@@ -694,7 +694,7 @@ class JIRA(object):
 
     @translate_resource_args
     def add_worklog(self, issue, timeSpent=None, adjustEstimate=None,
-                    newEstimate=None, reduceBy=None):
+                    newEstimate=None, reduceBy=None, **kwargs):
         """
         Create a new worklog entry on an issue and return a Resource for it.
 
@@ -713,11 +713,11 @@ class JIRA(object):
         if reduceBy is not None:
             params['reduceBy'] = reduceBy
 
-        data = {}
+        data = kwargs.copy()
         if timeSpent is not None:
             data['timeSpent'] = timeSpent
 
-        url = self._get_url('issue/{}/worklog'.format(issue))
+        url = self._get_url('issue/{0}/worklog'.format(issue))
         r = self._session.post(url, params=params, headers={'content-type':'application/json'}, data=json.dumps(data))
         raise_on_error(r)
 
@@ -1579,6 +1579,21 @@ class GreenHopper(JIRA):
     '''
     Define the functions that interact with GreenHopper
     '''
+
+    def add_issues_to_epic(self, epic_id, issueList):
+        '''
+        Add the given issues to the specified Epic issue
+        '''
+        data = {
+            "ignoreEpics": True,
+            "issueKeys": issueList
+        }
+        url = self._gh_get_url('epics/%s/add' % (epic_id))
+        r = self._session.put(url, headers={'content-type':'application/json'}, data=json.dumps(data))
+        raise_on_error(r)
+
+        result = r.json
+        return result
 
     def boards(self):
         '''
